@@ -24,30 +24,19 @@ if (!fs.existsSync(privateKeyPath)) {
   throw new Error('MINIPROGRAM_PRIVATE_KEY 指向的私钥文件不存在。')
 }
 
-for (const requiredFile of [
-  projectConfigPath,
-  path.join(projectPath, 'business', 'nativevue2.js'),
-  path.join(projectPath, 'lib', 'miniApp.js'),
-]) {
-  if (!fs.existsSync(requiredFile)) {
-    throw new Error(`缺少小程序构建产物：${path.relative(repositoryRoot, requiredFile)}`)
-  }
-}
-
-const projectConfig = JSON.parse(fs.readFileSync(projectConfigPath, 'utf8'))
-if (!projectConfig.appid) {
-  throw new Error('project.config.json 中没有 appid。')
-}
-
 fs.mkdirSync(outputDirectory, { recursive: true })
 
-const project = new ci.Project({
-  appid: projectConfig.appid,
-  type: 'miniProgram',
-  projectPath,
-  privateKeyPath,
-  ignores: [],
-})
+function checkBuildArtifacts() {
+  for (const requiredFile of [
+    projectConfigPath,
+    path.join(projectPath, 'business', 'nativevue2.js'),
+    path.join(projectPath, 'lib', 'miniApp.js'),
+  ]) {
+    if (!fs.existsSync(requiredFile)) {
+      throw new Error(`缺少小程序构建产物：${path.relative(repositoryRoot, requiredFile)}`)
+    }
+  }
+}
 
 function buildMiniProgram() {
   const wrapper = process.platform === 'win32' ? 'gradlew.bat' : './gradlew'
@@ -79,6 +68,21 @@ function buildMiniProgram() {
 async function main() {
   if (shouldBuild) buildMiniProgram()
 
+  checkBuildArtifacts()
+
+  const projectConfig = JSON.parse(fs.readFileSync(projectConfigPath, 'utf8'))
+  if (!projectConfig.appid) {
+    throw new Error('project.config.json 中没有 appid。')
+  }
+
+  const project = new ci.Project({
+    appid: projectConfig.appid,
+    type: 'miniProgram',
+    projectPath,
+    privateKeyPath,
+    ignores: [],
+  })
+
   const previewOptions = {
     project,
     desc: `本地预览 ${new Date().toLocaleString('zh-CN')}`,
@@ -103,7 +107,30 @@ async function main() {
   }
 }
 
+function describeError(error) {
+  const raw = error instanceof Error ? error.message : String(error)
+  const match = raw.match(/\{[\s\S]*\}/)
+  if (match) {
+    try {
+      const payload = JSON.parse(match[0])
+
+      if (payload.errCode === -10008) {
+        const ip = /invalid ip:\s*([\d.]+)/i.exec(raw)?.[1]
+
+        return [
+          "欢迎来到吱吱洋芋的温暖小窝~",
+          `当前设备出口IP地址${ip || '未知'}不在小程序代码上传白名单中，此开关仅在实验研发中保护打开，上线后将关闭。`,
+          '请到小程序后台(https://mp.weixin.qq.com)-> 开发管理-> 开发设置-> 小程序代码上传中添加白名单（需小程序管理员微信扫码验证）。',
+        ].join('\n')
+      }
+    } catch {
+      return raw
+    }
+  }
+  return raw
+}
+
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error)
+  console.error(describeError(error))
   process.exit(1)
 })
