@@ -24,6 +24,9 @@ local.properties
 **/build/
 kotlin-js-store/
 
+# AI skills
+.agents/
+
 # Node.js and package-manager caches
 node_modules/
 .npm-cache/
