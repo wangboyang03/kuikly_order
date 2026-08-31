@@ -85,9 +85,9 @@ fun copyLocalJSBundle(buildSubPath: String) {
 }
 
 project.afterEvaluate {
-  // kotlin 1.9 from 改为 $buildDir/dist/js/distributions
+  // Kotlin/JS production webpack output directory
   tasks.register<Copy>("syncRenderProductionToDist") {
-    from("$buildDir/kotlin-webpack/js/distributions")
+    from("$buildDir/kotlin-webpack/js/productionExecutable")
     into("$projectDir/dist/lib")
     include("**/*.js", "**/*.d.ts")
   }

@@ -1,24 +1,57 @@
+# IDE and operating-system files
+.idea/
 *.iml
-.gradle
-/local.properties
-.idea
 .DS_Store
-/build
-*/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-*.so
-*.js
-node_modules
-.npm-cache/
-Pods
-Pods/*
-Pods-iosApp/*
-Kotlin-js-store
+/captures/
+.externalNativeBuild/
+.cxx/
 
-## Various settings
+# Local machine settings and credentials
+local.properties
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.mobileprovision
+*.key
+
+# Gradle and Kotlin generated state
+.gradle/
+.kotlin/
+**/build/
+kotlin-js-store/
+
+# Node.js and package-manager caches
+node_modules/
+.npm-cache/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated mini-program bundles (the surrounding scaffold is source code)
+/miniApp/dist/business/
+/miniApp/dist/lib/
+/miniApp/dist/assets/
+/miniApp/webpack.config.d/
+
+# Local proxy configuration
+/.whistle.js
+/.miniapp-ci/
+/.miniapp-ci.local.json
+
+# HarmonyOS generated state
+**/oh_modules/
+**/.hvigor/
+**/.preview/
+
+# CocoaPods and Xcode user state
+Pods/
+Pods-iosApp/
+DerivedData/
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -27,14 +60,16 @@ Kotlin-js-store
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-**/xcuserdata/**
-**/*.xcuserdatad/**
-**/xcshareddata/
+**/xcuserdata/
+**/*.xcuserdatad/
 **/IDEWorkspaceChecks.plist
 
-## Other
+# Generated native binaries and temporary files
+*.so
+*.log
 *.moved-aside
 *.xccheckout
 *.xcscmblueprint
 *.xcbkptlist
 *.pyc
+__pycache__/

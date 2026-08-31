@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "node scripts/miniprogram-preview.cjs --build",
     "serve": "node static_server/serve/index.js",
-    "server": "node static_server/serve/index.js"
+    "server": "node static_server/serve/index.js",
+    "miniapp:preview": "node scripts/miniprogram-preview.cjs"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +17,7 @@
     "gulp": "^4.0.2",
     "gulp-zip": "^4.2.0",
     "husky": "^3.1.0",
+    "miniprogram-ci": "^2.1.31",
     "querystring": "^0.2.0",
     "shell": "^0.5.0",
     "shelljs": "^0.8.3"

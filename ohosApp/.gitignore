@@ -12,4 +12,4 @@
 /.appanalyzer
 /entry/libs/arm64-v8a/libshared.so
 /entry/src/main/cpp/libshared_api.h
-build-profile.json5
+/build-profile.json5
