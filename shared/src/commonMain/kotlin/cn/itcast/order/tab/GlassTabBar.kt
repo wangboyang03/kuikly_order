@@ -7,12 +7,13 @@ import com.tencent.kuikly.core.base.ComposeAttr
 import com.tencent.kuikly.core.base.ComposeEvent
 import com.tencent.kuikly.core.base.ComposeView
 import com.tencent.kuikly.core.base.Direction
-import com.tencent.kuikly.core.base.Rotate
 import com.tencent.kuikly.core.base.ViewBuilder
 import com.tencent.kuikly.core.base.ViewContainer
+import com.tencent.kuikly.core.base.attr.ImageUri
 import com.tencent.kuikly.core.directives.vif
 import com.tencent.kuikly.core.reactive.handler.observable
 import com.tencent.kuikly.core.views.GlassEffectStyle
+import com.tencent.kuikly.core.views.Image
 import com.tencent.kuikly.core.views.Text
 import com.tencent.kuikly.core.views.View
 
@@ -106,7 +107,7 @@ internal class GlassTabBar : ComposeView<GlassTabBarAttr, GlassTabBarEvent>() {
                             attr {
                                 iconType = ctx.attr.tabs[index].iconType
                                 selected = index == ctx.attr.selectedIndex
-                                glassEnable = ctx.attr.glassEnable
+                                orderedToday = ctx.attr.orderedToday
                             }
                         }
 
@@ -136,6 +137,8 @@ internal class GlassTabBarAttr : ComposeAttr() {
     /** Tab 数据，静态配置，无需响应式 */
     var tabs: List<TabItem> = emptyList()
     var selectedIndex: Int by observable(0)
+    /** 今日是否已下单，决定 ORDER tab 选中态用 order_full 还是 order_empty */
+    var orderedToday: Boolean by observable(false)
     /** 是否启用 iOS 26+ 液态玻璃，由外部通过 PlatformUtils 判断后传入 */
     var glassEnable: Boolean = false
 
@@ -158,7 +161,14 @@ internal fun ViewContainer<*, *>.GlassTabBar(init: GlassTabBar.() -> Unit) {
 }
 
 /**
- * 用 View 组合绘制的 Tab 图标，避免引入额外图片资源
+ * Tab 图标：使用 assets/common 下的矢量图（SVG）
+ *
+ * 资源命名约定：
+ * - standard  = 未选中
+ * - activated = 选中
+ * - order 特殊：选中态需区分今日是否已下单
+ *   - 今日已下单 → activated_order_full
+ *   - 今日未下单 → activated_order_empty
  */
 internal class TabIcon : ComposeView<TabIconAttr, ComposeEvent>() {
 
@@ -171,107 +181,61 @@ internal class TabIcon : ComposeView<TabIconAttr, ComposeEvent>() {
         val iconSize = TabTheme.TAB_ICON_SIZE
 
         return {
-            View {
+            Image {
                 attr {
                     size(iconSize, iconSize)
-                    allCenter()
-                }
-
-                when (ctx.attr.iconType) {
-                    TabIconType.HOME -> {
-                        // 屋顶：旋转 45° 的方块，下半部分被墙体盖住，形成尖顶
-                        View {
-                            attr {
-                                size(13f, 13f)
-                                absolutePosition(top = 1f, left = (iconSize - 13f) / 2)
-                                transform(Rotate(45f))
-                                borderRadius(2f)
-                                backgroundColor(
-                                    ctx.iconColor(ctx.attr.selected, ctx.attr.glassEnable)
-                                )
-                            }
-                        }
-                        // 墙体
-                        View {
-                            attr {
-                                size(15f, 12f)
-                                absolutePosition(bottom = 2f, left = (iconSize - 15f) / 2)
-                                borderRadius(2f)
-                                backgroundColor(
-                                    ctx.iconColor(ctx.attr.selected, ctx.attr.glassEnable)
-                                )
-                            }
-                        }
-                    }
-
-                    TabIconType.ORDER -> {
-                        // 三行单据线条
-                        val barWidths = listOf(16f, 11f, 16f)
-                        for ((rowIndex, barWidth) in barWidths.withIndex()) {
-                            View {
-                                attr {
-                                    size(barWidth, 3f)
-                                    absolutePosition(
-                                        top = 4f + rowIndex * 6f,
-                                        left = (iconSize - barWidth) / 2
-                                    )
-                                    borderRadius(1.5f)
-                                    backgroundColor(
-                                        ctx.iconColor(ctx.attr.selected, ctx.attr.glassEnable)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    TabIconType.PROFILE -> {
-                        // 头部
-                        View {
-                            attr {
-                                size(8f, 8f)
-                                absolutePosition(top = 2f, left = (iconSize - 8f) / 2)
-                                borderRadius(4f)
-                                backgroundColor(
-                                    ctx.iconColor(ctx.attr.selected, ctx.attr.glassEnable)
-                                )
-                            }
-                        }
-                        // 肩部
-                        View {
-                            attr {
-                                size(17f, 9f)
-                                absolutePosition(bottom = 2f, left = (iconSize - 17f) / 2)
-                                borderRadius(
-                                    topLeft = 8f,
-                                    topRight = 8f,
-                                    bottomLeft = 3f,
-                                    bottomRight = 3f
-                                )
-                                backgroundColor(
-                                    ctx.iconColor(ctx.attr.selected, ctx.attr.glassEnable)
-                                )
-                            }
-                        }
-                    }
+                    // 各图标 viewBox 宽高比不同（如首页为 64.86:50），必须 contain 否则会被拉伸变形
+                    resizeContain()
+                    src(
+                        ImageUri.commonAssets(
+                            ctx.attr.iconType.iconName(
+                                selected = ctx.attr.selected,
+                                orderedToday = ctx.attr.orderedToday
+                            )
+                        )
+                    )
                 }
             }
         }
-    }
-
-    private fun iconColor(selected: Boolean, glassEnable: Boolean): Color {
-        if (!selected) {
-            return TabTheme.tabIconNormal
-        }
-        return if (glassEnable) TabTheme.brandEnd else Color.WHITE
     }
 }
 
 internal class TabIconAttr : ComposeAttr() {
     var iconType: TabIconType = TabIconType.HOME
     var selected: Boolean by observable(false)
-    var glassEnable: Boolean by observable(false)
+    /** 今日是否已下单，仅 ORDER 的选中态使用 */
+    var orderedToday: Boolean by observable(false)
 }
 
 internal fun ViewContainer<*, *>.TabIcon(init: TabIcon.() -> Unit) {
     addChild(TabIcon(), init)
+}
+
+/**
+ * 按 Tab 类型 + 选中态解析图标文件名
+ */
+private fun TabIconType.iconName(selected: Boolean, orderedToday: Boolean): String {
+    return when (this) {
+        TabIconType.HOME ->
+            if (selected) TabIcons.ACTIVATED_HOMEPAGE else TabIcons.STANDARD_HOMEPAGE
+
+        TabIconType.ORDER -> when {
+            !selected -> TabIcons.STANDARD_ORDER
+            orderedToday -> TabIcons.ACTIVATED_ORDER_FULL
+            else -> TabIcons.ACTIVATED_ORDER_EMPTY
+        }
+
+        TabIconType.PROFILE ->
+            if (selected) TabIcons.ACTIVATED_MINE else TabIcons.STANDARD_MINE
+    }
+}
+
+private object TabIcons {
+    const val STANDARD_HOMEPAGE = "icon_tabs_standard_homepage.svg"
+    const val ACTIVATED_HOMEPAGE = "icon_tabs_activated_homepage.svg"
+    const val STANDARD_ORDER = "icon_tabs_standard_order.svg"
+    const val ACTIVATED_ORDER_EMPTY = "icon_tabs_activated_order_empty.svg"
+    const val ACTIVATED_ORDER_FULL = "icon_tabs_activated_order_full.svg"
+    const val STANDARD_MINE = "icon_tabs_standard_mine.svg"
+    const val ACTIVATED_MINE = "icon_tabs_activated_mine.svg"
 }

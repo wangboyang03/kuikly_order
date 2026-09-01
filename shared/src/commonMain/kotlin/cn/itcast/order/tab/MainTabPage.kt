@@ -25,6 +25,12 @@ internal class MainTabPage : BasePager() {
     private var selectedIndex: Int by observable(0)
     private var pageListRef: ViewRef<PageListView<*, *>>? = null
 
+    /**
+     * 今日是否已下单：决定「下单」tab 选中态用 order_full 还是 order_empty。
+     * TODO: 接入真实数据源（如下单成功后的本地标记 / 接口返回），目前默认 false
+     */
+    private var orderedToday: Boolean by observable(false)
+
     override fun body(): ViewBuilder {
         val ctx = this
         val tabItems = listOf(
@@ -81,6 +87,7 @@ internal class MainTabPage : BasePager() {
                     )
                     tabs = tabItems
                     selectedIndex = ctx.selectedIndex
+                    orderedToday = ctx.orderedToday
                     glassEnable = isGlassSupported
                 }
                 event {
