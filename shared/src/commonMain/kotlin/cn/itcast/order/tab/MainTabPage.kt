@@ -6,24 +6,15 @@ import com.tencent.kuikly.core.base.ViewBuilder
 import com.tencent.kuikly.core.base.ViewRef
 import com.tencent.kuikly.core.nvi.serialization.json.JSONObject
 import com.tencent.kuikly.core.reactive.handler.observable
-import com.tencent.kuikly.core.utils.PlatformUtils
 import com.tencent.kuikly.core.views.PageList
 import com.tencent.kuikly.core.views.PageListView
 import com.tencent.kuikly.core.views.View
 
-/**
- * 底部 Tab 容器页：首页 / 下单 / 我的
- * 支持左右滑动切换页签，也支持点击底部 Tab 切换（通过 PageList#scrollToPageIndex）
- *
- * 参考文档：
- * - docs/API/components/page-list.md
- * - demo: demo/src/commonMain/kotlin/com/tencent/kuikly/demo/pages/app/AppTabPage.kt
- */
 @Page("main_tab", supportInLocal = true)
 internal class MainTabPage : BasePager() {
-
     private var selectedIndex: Int by observable(0)
     private var pageListRef: ViewRef<PageListView<*, *>>? = null
+    private var pendingPageIndex: Int = -1
 
     /**
      * 今日是否已下单：决定「下单」tab 选中态用 order_full 还是 order_empty。
@@ -34,11 +25,17 @@ internal class MainTabPage : BasePager() {
     override fun body(): ViewBuilder {
         val ctx = this
         val tabItems = listOf(
-            TabItem("首页", TabIconType.HOME),
-            TabItem("下单", TabIconType.ORDER),
+            TabItem("首页", TabIconType.HOME, badge = "7"),
+            TabItem("下单", TabIconType.ORDER, badge = "1"),
             TabItem("我的", TabIconType.PROFILE)
         )
-        val isGlassSupported = PlatformUtils.isIOS() && PlatformUtils.isLiquidGlassSupported()
+        // 单个 Tab 槽位宽度：栏内宽 / 槽数，传给 GlassTabBar 用于滑动镜片距离换算
+        // 栏内宽封顶 TAB_BAR_MAX_WIDTH 并居中，避免大屏上整体拉得太长
+        val pageWidth = pagerData.pageViewWidth
+        val tabBarInnerWidth = (pageWidth - 2f * TabTheme.TAB_BAR_MARGIN)
+            .coerceAtMost(TabTheme.TAB_BAR_MAX_WIDTH)
+        val tabBarSideMargin = (pageWidth - tabBarInnerWidth) / 2f
+        val tabItemWidth = tabBarInnerWidth / tabItems.size
 
         return {
             attr {
@@ -66,10 +63,20 @@ internal class MainTabPage : BasePager() {
                     firstContentLoadMaxIndex(tabItems.size)
                     showScrollerIndicator(false)
                     keepItemAlive(true)
+                    // 禁止用户在内容区左右滑动切换页面（由底 Tab 栏手势统一接管）
+                    scrollEnable(false)
+                    pagingEnable(false)
                 }
                 event {
+                    // 页面索引变化（程序化翻页后回写选中态）
                     pageIndexDidChanged {
-                        ctx.selectedIndex = (it as JSONObject).optInt("index")
+                        val index = (it as JSONObject).optInt("index")
+                        // 程序化翻页过程中只接受最终目标页，忽略途经的中间页
+                        if (ctx.pendingPageIndex >= 0 && index != ctx.pendingPageIndex) {
+                            return@pageIndexDidChanged
+                        }
+                        ctx.pendingPageIndex = -1
+                        ctx.selectedIndex = index
                     }
                 }
 
@@ -82,18 +89,21 @@ internal class MainTabPage : BasePager() {
                 attr {
                     absolutePosition(
                         bottom = TabTheme.TAB_BAR_BOTTOM + pagerData.safeAreaInsets.bottom,
-                        left = TabTheme.TAB_BAR_MARGIN,
-                        right = TabTheme.TAB_BAR_MARGIN
+                        left = tabBarSideMargin,
+                        right = tabBarSideMargin
                     )
                     tabs = tabItems
                     selectedIndex = ctx.selectedIndex
                     orderedToday = ctx.orderedToday
-                    glassEnable = isGlassSupported
+                    itemWidth = tabItemWidth
                 }
                 event {
                     onTabSelected { index ->
+                        if (index == ctx.selectedIndex) return@onTabSelected
+                        ctx.pendingPageIndex = index
+                        // 更新选中态并驱动 PageList 翻页（内容直接切换，镜片由 GlassTabBar 自行平滑吸附）
                         ctx.selectedIndex = index
-                        ctx.pageListRef?.view?.scrollToPageIndex(index, true)
+                        ctx.pageListRef?.view?.scrollToPageIndex(index, false)
                     }
                 }
             }

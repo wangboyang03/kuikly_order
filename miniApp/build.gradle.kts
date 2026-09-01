@@ -122,6 +122,7 @@ project.afterEvaluate {
     group = "kuikly"
     // Build both the mini-app renderer and the shared business bundle first.
     dependsOn("jsBrowserProductionWebpack", ":shared:jsBrowserProductionWebpack")
+    finalizedBy("copyAssets")
     // Then copy corresponding nativevue2.zip from business build result and copy nativevue2.js
     // to miniApp's release directory
     doLast {
@@ -133,6 +134,7 @@ project.afterEvaluate {
     group = "kuikly"
     // Build both the mini-app renderer and the shared business bundle first.
     dependsOn("jsBrowserDevelopmentWebpack", ":shared:jsBrowserDevelopmentWebpack")
+    finalizedBy("copyAssets")
     // Then copy corresponding nativevue2.zip from business build result and copy nativevue2.js
     // to miniApp's release directory
     doLast {
