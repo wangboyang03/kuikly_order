@@ -17,7 +17,7 @@ class TabViewModel(scope: PagerScope) {
   fun selectTab(index: Int): Boolean {
     val target = index.coerceIn(0, (tabCount - 1).coerceAtLeast(0)) // 越界保护[0, 0]
     if (target == state.selectedIndex) return false
-    setState { copy(selectedIndex = target) }
+    _state = _state.copy(selectedIndex = target)
     return true
   }
   
@@ -26,8 +26,8 @@ class TabViewModel(scope: PagerScope) {
    * @param index 目标页面索引
    */
   fun syncPageIndex(index: Int) {
-    setState {
-      copy(selectedIndex = index.coerceIn(0, (tabList.size - 1).coerceAtLeast(0)))
+    _state = _state.let {
+      it.copy(selectedIndex = index.coerceIn(0, (it.tabList.size - 1).coerceAtLeast(0)))
     }
   }
   
@@ -36,11 +36,6 @@ class TabViewModel(scope: PagerScope) {
    * @param ordered
    */
   fun setOrderedToday(ordered: Boolean) {
-    setState { copy(orderedToday = ordered) }
-  }
-
-  private fun setState(reducer: TabViewState.() -> TabViewState) {
-    // 带接收者的函数类型, 当lambda在被调用时, this指向TabViewState实例
-    _state = _state.reducer()
+    _state = _state.copy(orderedToday = ordered)
   }
 }
