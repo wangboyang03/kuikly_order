@@ -1,5 +1,6 @@
-package cn.itcast.order.tab
+package cn.itcast.order.views.index
 
+import cn.itcast.order.models.TabItemParams
 import com.tencent.kuikly.core.base.Border
 import com.tencent.kuikly.core.base.BorderStyle
 import com.tencent.kuikly.core.base.BoxShadow
@@ -13,31 +14,20 @@ import com.tencent.kuikly.core.base.ViewContainer
 import com.tencent.kuikly.core.base.attr.ImageUri
 import com.tencent.kuikly.core.base.event.ClickParams
 import com.tencent.kuikly.core.base.event.PanGestureParams
-import com.tencent.kuikly.core.timer.clearTimeout
-import com.tencent.kuikly.core.timer.setTimeout
 import com.tencent.kuikly.core.directives.vif
 import com.tencent.kuikly.core.reactive.handler.observable
+import com.tencent.kuikly.core.timer.clearTimeout
+import com.tencent.kuikly.core.timer.setTimeout
 import com.tencent.kuikly.core.views.Image
 import com.tencent.kuikly.core.views.Text
 import com.tencent.kuikly.core.views.View
 
 /**
- * 底部悬浮 Tab 数据
+ * 底部悬浮玻璃质感 Tab 栏。
  *
- * @param badge 角标文案；为 null 时不显示角标。可填数字（如 "7"）或符号（如 "!"）。
+ * 纯渲染组件：数据由 [GlassTabBarAttr.tabs] 传入，选中结果通过
+ * [GlassTabBarEvent.onTabSelected] 回调上抛，自身不持有业务状态。
  */
-internal data class TabItem(
-    val title: String,
-    val iconType: TabIconType,
-    val badge: String? = null
-)
-
-internal enum class TabIconType {
-    HOME,
-    ORDER,
-    PROFILE
-}
-
 internal class GlassTabBar : ComposeView<GlassTabBarAttr, GlassTabBarEvent>() {
 
     override fun createAttr(): GlassTabBarAttr = GlassTabBarAttr()
@@ -129,11 +119,19 @@ internal class GlassTabBar : ComposeView<GlassTabBarAttr, GlassTabBarEvent>() {
                             attr {
                                 size(TabTheme.TAB_ICON_SIZE, TabTheme.TAB_ICON_SIZE)
                             }
-                            TabIcon {
+                            Image {
                                 attr {
-                                    iconType = ctx.attr.tabs[index].iconType
-                                    selected = index == ctx.attr.selectedIndex
-                                    orderedToday = ctx.attr.orderedToday
+                                    size(TabTheme.TAB_ICON_SIZE, TabTheme.TAB_ICON_SIZE)
+                                    // 各图标 viewBox 宽高比不同（如首页为 64.86:50），必须 contain 否则会被拉伸变形
+                                    resizeContain()
+                                    src(
+                                        ImageUri.commonAssets(
+                                            ctx.attr.tabs[index].icon(
+                                                selected = index == ctx.attr.selectedIndex,
+                                                orderedToday = ctx.attr.orderedToday
+                                            )
+                                        )
+                                    )
                                 }
                             }
                             vif({ ctx.attr.tabs[index].badge != null }) {
@@ -159,12 +157,12 @@ internal class GlassTabBar : ComposeView<GlassTabBarAttr, GlassTabBarEvent>() {
                         Text {
                             attr {
                                 marginTop(2f)
-                                text(ctx.attr.tabs[index].title)
+                                text(ctx.attr.tabs[index].name)
                                 fontSize(11f)
                                 fontWeight600()
                                 color(
                                     if (index == ctx.attr.selectedIndex) {
-                                        TabTheme.brandEnd
+                                        TabTheme.tabTextActivated
                                     } else {
                                         TabTheme.tabTextNormal
                                     }
@@ -213,7 +211,7 @@ internal class GlassTabBar : ComposeView<GlassTabBarAttr, GlassTabBarEvent>() {
 
 internal class GlassTabBarAttr : ComposeAttr() {
     /** Tab 数据，静态配置，无需响应式 */
-    var tabs: List<TabItem> = emptyList()
+    var tabs: List<TabItemParams> = emptyList()
     /** 离散选中索引：控制文字/图标颜色（拖拽过程中不变色，避免闪烁） */
     var selectedIndex: Int by observable(0)
     /**
@@ -257,84 +255,4 @@ internal class GlassTabBarEvent : ComposeEvent() {
 
 internal fun ViewContainer<*, *>.GlassTabBar(init: GlassTabBar.() -> Unit) {
     addChild(GlassTabBar(), init)
-}
-
-/**
- * Tab 图标：使用 assets/common 下的矢量图（SVG）
- *
- * 资源命名约定：
- * - standard  = 未选中
- * - activated = 选中
- * - order 特殊：选中态需区分今日是否已下单
- *   - 今日已下单 → activated_order_full
- *   - 今日未下单 → activated_order_empty
- */
-internal class TabIcon : ComposeView<TabIconAttr, ComposeEvent>() {
-
-    override fun createAttr(): TabIconAttr = TabIconAttr()
-
-    override fun createEvent(): ComposeEvent = ComposeEvent()
-
-    override fun body(): ViewBuilder {
-        val ctx = this
-        val iconSize = TabTheme.TAB_ICON_SIZE
-
-        return {
-            Image {
-                attr {
-                    size(iconSize, iconSize)
-                    // 各图标 viewBox 宽高比不同（如首页为 64.86:50），必须 contain 否则会被拉伸变形
-                    resizeContain()
-                    src(
-                        ImageUri.commonAssets(
-                            ctx.attr.iconType.iconName(
-                                selected = ctx.attr.selected,
-                                orderedToday = ctx.attr.orderedToday
-                            )
-                        )
-                    )
-                }
-            }
-        }
-    }
-}
-
-internal class TabIconAttr : ComposeAttr() {
-    var iconType: TabIconType = TabIconType.HOME
-    var selected: Boolean by observable(false)
-    /** 今日是否已下单，仅 ORDER 的选中态使用 */
-    var orderedToday: Boolean by observable(false)
-}
-
-internal fun ViewContainer<*, *>.TabIcon(init: TabIcon.() -> Unit) {
-    addChild(TabIcon(), init)
-}
-
-/**
- * 按 Tab 类型 + 选中态解析图标文件名
- */
-private fun TabIconType.iconName(selected: Boolean, orderedToday: Boolean): String {
-    return when (this) {
-        TabIconType.HOME ->
-            if (selected) TabIcons.ACTIVATED_HOMEPAGE else TabIcons.STANDARD_HOMEPAGE
-
-        TabIconType.ORDER -> when {
-            !selected -> TabIcons.STANDARD_ORDER
-            orderedToday -> TabIcons.ACTIVATED_ORDER_FULL
-            else -> TabIcons.ACTIVATED_ORDER_EMPTY
-        }
-
-        TabIconType.PROFILE ->
-            if (selected) TabIcons.ACTIVATED_MINE else TabIcons.STANDARD_MINE
-    }
-}
-
-private object TabIcons {
-    const val STANDARD_HOMEPAGE = "icon_tabs_standard_homepage.svg"
-    const val ACTIVATED_HOMEPAGE = "icon_tabs_activated_homepage.svg"
-    const val STANDARD_ORDER = "icon_tabs_standard_order.svg"
-    const val ACTIVATED_ORDER_EMPTY = "icon_tabs_activated_order_empty.svg"
-    const val ACTIVATED_ORDER_FULL = "icon_tabs_activated_order_full.svg"
-    const val STANDARD_MINE = "icon_tabs_standard_mine.svg"
-    const val ACTIVATED_MINE = "icon_tabs_activated_mine.svg"
 }

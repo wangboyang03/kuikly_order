@@ -1,28 +1,29 @@
-package cn.itcast.order.tab
+package cn.itcast.order.views.index
 
 import com.tencent.kuikly.core.base.Color
 
 /**
- * 底 Tab 场景统一的颜色与尺寸
+ * 底 Tab 场景的视觉规范（颜色 / 尺寸）。
+ *
+ * 仅 View 层使用：Model 层的 [cn.itcast.order.models.TabModel] 只描述 Tab 栏展示，
+ * 页面背景色由各内容页（HomePage / OrderPage / MinePage）在此自行取用。
  */
 internal object TabTheme {
 
-    // 背景
+    // ---- Tab 内容页纯色背景：用高饱和纯色，便于观察悬浮 TabBar 的半透明叠加效果 ----
+    val bgGreenApple = Color(0xFF8FD14F)
+    val bgSweetOrange = Color(0xFFFFA45C)
+    val bgLightPink = Color(0xFFFFC9DE)
+
+    /** 兜底背景（Tab 数据缺失时） */
     val pageBackground = Color(0xFFF4F6FB)
-    val cardBackground = Color(0xFFFFFFFF)
-    val divider = Color(0xFFEDEFF5)
 
-    // 品牌色
-    val brandStart = Color(0xFFFF9A3D)
-    val brandEnd = Color(0xFFFF4D6D)
+    /** 内容页标题文字：浅色背景上用深色，保证对比度 */
+    val pageTitle = Color(0xFF2F3237)
 
-    // 文字
-    val titleColor = Color(0xFF1A1C1F)
-    val bodyColor = Color(0xFF4A4F57)
-    val subTitleColor = Color(0xFF9AA1AB)
-
-    // TabBar
+    // ---- TabBar ----
     val tabTextNormal = Color(0xFF8A8F99)
+    val tabTextActivated = Color(0xFFFF4D6D)
     /**
      * Tab 栏底板：90% 半透明白，靠阴影与圆角表现悬浮玻璃质感，
      * 不依赖任何原生 backdrop-filter / iOS 液态玻璃 API，所有端一致。
@@ -32,12 +33,11 @@ internal object TabTheme {
      * 滑动镜片（lens）：水滴玻璃效果。
      * 用 10% 黑色半透明模拟"磨砂玻璃"遮挡感，
      * 配合 1px 细边框模拟玻璃边缘高光折射线。
-     * 不依赖 backdrop-filter / iOS 液态玻璃 API，所有端一致。
      */
     val lensBackground = Color(0x1A000000)
     /** 镜片细边框：模拟玻璃边缘的高光折射线 */
     val lensBorderColor = Color(0x26FFFFFF)
-    /** 角标背景：品牌红色（与 brandEnd 一致） */
+    /** 角标背景 */
     val badgeBackground = Color(0xFFFF4D6D)
 
     /** TabBar 高度 */
@@ -48,8 +48,6 @@ internal object TabTheme {
     const val TAB_BAR_MAX_WIDTH = 340f
     /** TabBar 距屏幕底部距离（未含安全区） */
     const val TAB_BAR_BOTTOM = 14f
-    /** 页面内容底部预留，避免被悬浮 TabBar 遮挡 */
-    const val TAB_CONTENT_BOTTOM = 112f
     /** 图标区域尺寸 */
     const val TAB_ICON_SIZE = 22f
 
