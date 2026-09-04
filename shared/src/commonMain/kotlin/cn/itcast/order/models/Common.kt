@@ -24,9 +24,10 @@ data class TabItemParams(
 
 /**
  * Tab视图状态
- * @param tabList Tab项数据源
- * @param selectedIndex 当前选中下标
- * @param orderedToday 今日是否已下单，决定「下单」Tab 选中态图标
+ * @param tabList Tabs数据源
+ * @param selectedIndex 当前选中索引
+ * @param orderedToday 今日是否已下单 后续业务维护
+ * @param loadedPages 已加载页签下标集合
  */
 data class TabViewState(
   val tabList: List<TabItemParams> = listOf(
@@ -35,5 +36,9 @@ data class TabViewState(
     TabItemParams("我的", "icon_tabs_standard_mine.svg", "icon_tabs_activated_mine.svg")
   ),
   val selectedIndex: Int = 0,
-  val orderedToday: Boolean = false
+  val orderedToday: Boolean = false,
+  // 这里用了懒加载机制. 因为一次性加载所有TabItem会有很大内存开销 而且容易首屏卡帧
+  // 安卓有ViewPager2/HorizontalPager iOS有UIViewController 鸿蒙TabContent
+  // 原生提供的组件足以管理页面 kuikly本质上还是在声明组件树 需要业务自己管理
+  val loadedPages: Set<Int> = setOf(0)
 )

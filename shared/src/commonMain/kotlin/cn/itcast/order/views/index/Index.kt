@@ -2,87 +2,75 @@ package cn.itcast.order.views.index
 
 import cn.itcast.order.base.BasePager
 import cn.itcast.order.viewmodels.TabViewModel
+import cn.itcast.order.views.homepage.homepageView
+import cn.itcast.order.views.mine.mineView
+import cn.itcast.order.views.order.orderView
 import com.tencent.kuikly.core.annotations.Page
+import com.tencent.kuikly.core.base.Color
 import com.tencent.kuikly.core.base.ViewBuilder
-import com.tencent.kuikly.core.base.ViewRef
+import com.tencent.kuikly.core.directives.vif
 import com.tencent.kuikly.core.layout.FlexDirection
 import com.tencent.kuikly.core.layout.undefined
-import com.tencent.kuikly.core.nvi.serialization.json.JSONObject
-import com.tencent.kuikly.core.views.PageList
-import com.tencent.kuikly.core.views.PageListView
+import com.tencent.kuikly.core.views.View
 
 @Page("main_tab", supportInLocal = true)
 internal class Index : BasePager() {
   private val viewModel = TabViewModel(this)
-  private var pageController: ViewRef<PageListView<*, *>>? = null // ViewRef 句柄容器
-  private var pendingPageIndex: Int? = null // 用于点击切换的目标页 依赖过滤PageList途经的中间页
 
   override fun body(): ViewBuilder {
     val context = this
     val vm = context.viewModel
     val pageWidth = pagerData.pageViewWidth
-    val tabBarInnerWidth = (pageWidth - 2f * TabTheme.TAB_BAR_MARGIN).coerceAtMost(TabTheme.TAB_BAR_MAX_WIDTH)
+    val tabBarInnerWidth = (pageWidth - 2f * 40f).coerceAtMost(340f)
     val tabBarSideMargin = (pageWidth - tabBarInnerWidth) / 2f
-    val tabItemWidth = tabBarInnerWidth / vm.tabCount
+    val tabBarBottom = 14f + context.bottomSafeInset()
 
     return {
       attr {
-        backgroundColor(TabTheme.pageBackground)
+        flexDirection(FlexDirection.COLUMN)
+        backgroundColor(Color(0xFFFFFFFF))
       }
 
-      PageList {
-        // 组件将句柄返回 ref类似LazyListState pageController类似鸿蒙Controller
-        ref {
-          context.pageController = it
-        }
+      // 内容区
+      View {
         attr {
-          flexDirection(FlexDirection.ROW)
-          pageDirection(true)
-          pageItemWidth(pagerData.pageViewWidth)
-          pageItemHeight(pagerData.pageViewHeight) // 页面全屏高度
-          defaultPageIndex(0)
-          firstContentLoadMaxIndex(vm.tabCount)
-          showScrollerIndicator(false)
-          keepItemAlive(true)
-          scrollEnable(false) // 禁用页面滑动切换
-          pagingEnable(false)
+          // 铺满父容器
+          absolutePositionAllZero()
         }
-        event {
-          // 页面索引变化
-          pageIndexDidChanged {
-            val index = (it as JSONObject).optInt("index")
-            // 切换时 只接受最终目标页 丢掉途经的中间页
-            val target = context.pendingPageIndex
-            if (target != null && index != target) {
-              return@pageIndexDidChanged
+
+        for (index in vm.state.tabList.indices) {
+          vif({ vm.isPageLoaded(index) && vm.state.selectedIndex == index }) {
+            when (index) {
+              0 -> homepageView { attr { absolutePositionAllZero() } }
+              1 -> orderView { attr { absolutePositionAllZero() } }
+              2 -> mineView { attr { absolutePositionAllZero() } }
             }
-            context.pendingPageIndex = null
-            vm.syncPageIndex(index)
           }
         }
-        HomePage { }
-        OrderPage { }
-        MinePage { }
       }
 
       Tabs {
         attr {
-          absolutePosition(Float.undefined, tabBarSideMargin, TabTheme.TAB_BAR_BOTTOM + pagerData.safeAreaInsets.bottom, tabBarSideMargin)
+          absolutePosition(Float.undefined, tabBarSideMargin, tabBarBottom, tabBarSideMargin)
           tabs = vm.state.tabList
           selectedIndex = vm.state.selectedIndex
           orderedToday = vm.state.orderedToday
-          itemWidth = tabItemWidth
         }
         event {
-          onTabSelected { index ->
-            // 只有选中态发生变化才翻页
-            if (!vm.selectTab(index)) return@onTabSelected
-            // 内容直接切换
-            val scrolled = context.pageController?.view?.scrollToPageIndex(index, false) ?: false
-            context.pendingPageIndex = if (scrolled) index else null
-          }
+          onTabSelected { index -> vm.selectTab(index) }
         }
       }
     }
+  }
+
+  private fun bottomSafeInset(): Float {
+    val fromFramework = pagerData.safeAreaInsets.bottom
+    val fromHost = pageData.params.optString(PARAM_SAFE_AREA_BOTTOM).toFloatOrNull() ?: 0f
+    return maxOf(fromFramework, fromHost, 20f)
+  }
+
+  companion object {
+    /** 宿主透传的底部安全区高度参数名 */
+    private const val PARAM_SAFE_AREA_BOTTOM = "safeAreaBottom"
   }
 }
