@@ -6,10 +6,10 @@
   "themeLocation": "theme.json",
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#fff",
+    "navigationBarBackgroundColor": "@navBgColor",
     "navigationBarTitleText": "WeChat",
     "navigationStyle": "custom",
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "@navTxtStyle",
     "backgroundColor": "@bgColor",
     "enablePullDownRefresh": false
   }

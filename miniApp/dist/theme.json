@@ -2,11 +2,11 @@
   "light": {
     "navBgColor": "#ffffff",
     "navTxtStyle": "black",
-    "bgColor": "#f6f9f6"
+    "bgColor": "#ffffff"
   },
   "dark": {
-    "navBgColor": "#0e1512",
+    "navBgColor": "#1b1b1d",
     "navTxtStyle": "white",
-    "bgColor": "#0e1512"
+    "bgColor": "#1b1b1d"
   }
 }
