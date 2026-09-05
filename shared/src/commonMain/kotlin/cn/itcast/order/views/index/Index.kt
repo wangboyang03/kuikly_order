@@ -1,6 +1,7 @@
 package cn.itcast.order.views.index
 
 import cn.itcast.order.base.BasePager
+import cn.itcast.order.viewmodels.OrderViewModel
 import cn.itcast.order.viewmodels.TabViewModel
 import cn.itcast.order.views.homepage.homepageView
 import cn.itcast.order.views.mine.mineView
@@ -16,10 +17,12 @@ import com.tencent.kuikly.core.views.View
 @Page("main_tab", supportInLocal = true)
 internal class Index : BasePager() {
   private val viewModel = TabViewModel(this)
+  private val orderViewModel = OrderViewModel(this)
 
   override fun body(): ViewBuilder {
     val context = this
-    val vm = context.viewModel
+    val tabViewModel = context.viewModel
+    val orderViewModel = context.orderViewModel
     val pageWidth = pagerData.pageViewWidth
     val tabBarInnerWidth = (pageWidth - 2f * 40f).coerceAtMost(340f)
     val tabBarSideMargin = (pageWidth - tabBarInnerWidth) / 2f
@@ -38,11 +41,26 @@ internal class Index : BasePager() {
           absolutePositionAllZero()
         }
 
-        for (index in vm.state.tabList.indices) {
-          vif({ vm.isPageLoaded(index) && vm.state.selectedIndex == index }) {
+        for (index in tabViewModel.state.tabList.indices) {
+          vif({ tabViewModel.isPageLoaded(index) && tabViewModel.state.selectedIndex == index }) {
             when (index) {
               0 -> homepageView { attr { absolutePositionAllZero() } }
-              1 -> orderView { attr { absolutePositionAllZero() } }
+              1 -> orderView {
+                attr {
+                  absolutePositionAllZero()
+                  cartBottom = tabBarBottom + 74f
+                  state = orderViewModel.state
+                }
+                event {
+                  onCategorySelect { category -> orderViewModel.selectCategory(category) }
+                  onAddDish { orderViewModel.addDish() }
+                  onDecreaseDish { orderViewModel.decreaseDish() }
+                  onCartOpen { orderViewModel.openCart() }
+                  onCheckout { _, _ ->
+                    if (orderViewModel.checkout()) tabViewModel.setOrderedToday(true)
+                  }
+                }
+              }
               2 -> mineView { attr { absolutePositionAllZero() } }
             }
           }
@@ -52,12 +70,12 @@ internal class Index : BasePager() {
       Tabs {
         attr {
           absolutePosition(Float.undefined, tabBarSideMargin, tabBarBottom, tabBarSideMargin)
-          tabs = vm.state.tabList
-          selectedIndex = vm.state.selectedIndex
-          orderedToday = vm.state.orderedToday
+          tabs = tabViewModel.state.tabList
+          selectedIndex = tabViewModel.state.selectedIndex
+          orderedToday = tabViewModel.state.orderedToday
         }
         event {
-          onTabSelected { index -> vm.selectTab(index) }
+          onTabSelected { index -> tabViewModel.selectTab(index) }
         }
       }
     }
