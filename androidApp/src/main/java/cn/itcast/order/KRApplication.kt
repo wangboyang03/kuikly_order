@@ -15,13 +15,13 @@ class KRApplication : Application() {
   override fun onCreate() {
     super.onCreate()
     // 与当前系统主题对齐
-    AppTheme.setDark(isSystemDark())
+    AppTheme.updateDark(isSystemDark())
     // 监听系统深浅色切换
     registerComponentCallbacks(object : ComponentCallbacks2 {
       override fun onConfigurationChanged(newConfig: Configuration) {
         val isNight = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
           Configuration.UI_MODE_NIGHT_YES
-        AppTheme.setDark(isNight)
+        AppTheme.updateDark(isNight)
       }
       override fun onLowMemory() {}
       override fun onTrimMemory(level: Int) {}

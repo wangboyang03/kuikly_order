@@ -47,11 +47,11 @@ fun main() { // 小程序应用级生命周期
 @JsName(name = "renderView") @JsExport @ExperimentalJsExport fun renderView(json: dynamic) {
   // Write to global render function
   val renderParams = FastMutableMap<String, dynamic>(json)
-  // View size 由渲染层自行按窗口尺寸兜底
-  var size: SizeI? = null
-  if (json.width != null && json.height != null) {
-    size = SizeI(json.width.unsafeCast<Int>(), json.height.unsafeCast<Int>()) // 只在宿主显式传了width/height时才构造
-  }
+  val systemInfo = NativeApi.plat.getSystemInfoSync()
+  val size = SizeI(
+    (json.width ?: systemInfo.screenWidth).unsafeCast<Int>(),
+    (json.height ?: systemInfo.screenHeight).unsafeCast<Int>()
+  )
 
   /**
    * 内部构造 pageOnLoadOptions + safeAreaInsets + is_miniprogram
@@ -59,7 +59,6 @@ fun main() { // 小程序应用级生命周期
    * onLoadCallback(pageId, pageName, usedParams)
    */
   MiniDocument.initPage(renderParams) { pageId: Int, pageName: String, paramsMap: FastMutableMap<String, Any> ->
-    val systemInfo = NativeApi.plat.getSystemInfoSync()
     val isAndroid = systemInfo.platform == "android" // 读取宿主契约
     val params = paramsMap["param"].unsafeCast<FastMutableMap<String, Any>>()
     params["is_wx_mp"] = "true"

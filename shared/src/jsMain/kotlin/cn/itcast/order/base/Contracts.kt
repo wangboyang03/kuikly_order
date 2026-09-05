@@ -42,7 +42,7 @@ private fun observeThemeChange() {
             if (wx.onThemeChange != null) {
                 wx.onThemeChange { res: dynamic ->
                     try {
-                       AppTheme.isDark = (res?.theme == "dark")
+                       AppTheme.updateDark(res?.theme == "dark")
                     } catch (e: Throwable) {
                     }
                 }
@@ -53,7 +53,7 @@ private fun observeThemeChange() {
                 val window = win.unsafeCast<dynamic>()
                 if (window.matchMedia != null) {
                     val mq = window.matchMedia("(prefers-color-scheme: dark)")
-                    val handler = { e: dynamic -> AppTheme.isDark = (e?.matches == true) }
+                    val handler = { e: dynamic -> AppTheme.updateDark(e?.matches == true) }
                     if (mq.addEventListener != null) mq.addEventListener("change", handler)
                     else if (mq.addListener != null) mq.addListener(handler)
                 }
