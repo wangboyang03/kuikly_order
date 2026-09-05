@@ -305,6 +305,19 @@ internal class BridgeModule : Module() {
         return syncCallNativeMethod(URL_DECODE, params, null)
     }
 
+    // 同步获取平台是否处于暗色模式
+    fun getSystemDarkMode(): Boolean {
+      val result = syncCallNativeMethod(GET_SYSTEM_DARK_MODE, null, null)
+      return result == "true" || result == "1"
+    }
+
+    // 订阅平台深浅色主题变化
+    fun observeSystemDarkMode(onChange: (Boolean) -> Unit) {
+      callNativeMethod(OBSERVE_SYSTEM_DARK_MODE, null) { data ->
+        onChange(data?.optBoolean("dark") ?: false)
+      }
+    }
+
     private fun callNativeMethod(methodName: String, data: JSONObject?, callbackFn: CallbackFn?) {
         toNative(
             false,
@@ -350,6 +363,8 @@ internal class BridgeModule : Module() {
         const val CLOSE_KEYBOARD = "closeKeyboard"
         const val URL_ENCODE = "urlEncode"
         const val URL_DECODE = "urlDecode"
+        const val GET_SYSTEM_DARK_MODE = "getSystemDarkMode"
+        const val OBSERVE_SYSTEM_DARK_MODE = "observeSystemDarkMode"
         const val SHOW_PHOTO_BROWSER = "showPhotoBrowser"
         const val HUMAN_VERIFICATION = "humanVerification"
     }

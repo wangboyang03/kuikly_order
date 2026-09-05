@@ -1,4 +1,5 @@
-import { common } from '@kit.AbilityKit';
+import configuration from '@ohos.configuration';
+import { common, ConfigurationConstant } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { KRAny } from '@kuikly-open/render';
 import { KuiklyRenderBaseModule } from '@kuikly-open/render';
@@ -21,6 +22,8 @@ export class KRBridgeModule extends KuiklyRenderBaseModule {
   static readonly CURRENT_TIME_STAMP = "currentTimestamp";
   static readonly DATE_FORMATTER = "dateFormatter";
   static readonly READ_ASSET_FILE = "readAssetFile";
+  static readonly GET_SYSTEM_DARK_MODE = "getSystemDarkMode"
+  static readonly OBSERVE_SYSTEM_DARK_MODE = "observeSystemDarkMode"
 
   syncMode(): boolean {
     return false;
@@ -69,6 +72,13 @@ export class KRBridgeModule extends KuiklyRenderBaseModule {
       }
       case KRBridgeModule.DATE_FORMATTER: {
         return this.dateFormatter(params);
+      }
+      case KRBridgeModule.GET_SYSTEM_DARK_MODE: {
+        return this.getSystemDarkMode()
+      }
+      case KRBridgeModule.OBSERVE_SYSTEM_DARK_MODE: {
+        this.observeSystemDarkMode(callback)
+        break
       }
       case KRBridgeModule.READ_ASSET_FILE: {
         this.readAssetFile(params, callback);
@@ -124,6 +134,28 @@ export class KRBridgeModule extends KuiklyRenderBaseModule {
   private dateFormatter(params: KRAny): string {
     console.log(`========== ${params}`)
     return "";
+  }
+
+  // 读取系统主题模式
+  private getSystemDarkMode(): string {
+    let currentColorMode = configuration.getColorMode()
+    return currentColorMode == ConfigurationConstant.ColorMode.COLOR_MODE_DARK ? "true" : "false"
+  }
+
+  // 订阅系统深浅色变化：注册 colorModeChange 监听，变化时经 callback 回传核心 {dark: Boolean}
+  private observeSystemDarkMode(callback: KuiklyRenderCallback) {
+    const notify = () => {
+      let currentColorMode = configuration.getColorMode()
+      callback({ "dark": currentColorMode == ConfigurationConstant.ColorMode.COLOR_MODE_DARK })
+    }
+    // 立即回传当前值
+    notify()
+    try {
+      configuration.on('colorModeChange', () => {
+        notify()
+      })
+    } catch (e) {
+    }
   }
 
   private readAssetFile(params: KRAny, callback: KuiklyRenderCallback) {

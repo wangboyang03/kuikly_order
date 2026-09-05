@@ -1,6 +1,6 @@
 package cn.itcast.order.views.homepage
 
-import com.tencent.kuikly.core.base.Color
+import cn.itcast.order.base.AppTheme
 import com.tencent.kuikly.core.base.ComposeAttr
 import com.tencent.kuikly.core.base.ComposeEvent
 import com.tencent.kuikly.core.base.ComposeView
@@ -21,15 +21,7 @@ internal class HomePageView: ComposeView<ComposeAttr, ComposeEvent>() {
           flex(1f)
           allCenter()
           paddingTop(context.pagerData.statusBarHeight) // 开启沉浸式状态栏
-          backgroundColor(Color(0xFF8FD14F))
-        }
-        Text {
-          attr {
-            text("首页")
-            fontSize(32f)
-            fontWeight700()
-            color(0xFF000000)
-          }
+          backgroundColor(AppTheme.background)
         }
       }
     }

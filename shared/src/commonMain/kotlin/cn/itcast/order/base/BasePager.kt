@@ -17,11 +17,15 @@ internal abstract class BasePager : Pager() {
     override fun created() {
         super.created()
         isNightMode()
+        // 订阅系统/宿主主题变化
+        observeSystemThemeChanges { AppTheme.setDark(it) }
     }
 
     override fun themeDidChanged(data: JSONObject) {
         super.themeDidChanged(data)
         nightModel = data.optBoolean(IS_NIGHT_MODE_KEY)
+        // 引擎转发的主题变化也同步到共享主题
+        AppTheme.setDark(data.optBoolean(IS_NIGHT_MODE_KEY))
     }
 
     // 是否为夜间模式

@@ -6,7 +6,7 @@ import cn.itcast.order.views.homepage.homepageView
 import cn.itcast.order.views.mine.mineView
 import cn.itcast.order.views.order.orderView
 import com.tencent.kuikly.core.annotations.Page
-import com.tencent.kuikly.core.base.Color
+import cn.itcast.order.base.AppTheme
 import com.tencent.kuikly.core.base.ViewBuilder
 import com.tencent.kuikly.core.directives.vif
 import com.tencent.kuikly.core.layout.FlexDirection
@@ -28,7 +28,7 @@ internal class Index : BasePager() {
     return {
       attr {
         flexDirection(FlexDirection.COLUMN)
-        backgroundColor(Color(0xFFFFFFFF))
+        backgroundColor(AppTheme.background)
       }
 
       // 内容区

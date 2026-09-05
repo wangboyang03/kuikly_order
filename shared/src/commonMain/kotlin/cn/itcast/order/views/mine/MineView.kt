@@ -1,6 +1,6 @@
 package cn.itcast.order.views.mine
 
-import com.tencent.kuikly.core.base.Color
+import cn.itcast.order.base.AppTheme
 import com.tencent.kuikly.core.base.ComposeAttr
 import com.tencent.kuikly.core.base.ComposeEvent
 import com.tencent.kuikly.core.base.ComposeView
@@ -21,14 +21,14 @@ internal class MineView: ComposeView<ComposeAttr, ComposeEvent>() {
           flex(1f)
           allCenter()
           paddingTop(context.pagerData.statusBarHeight)
-          backgroundColor(Color(0xFFFFC9DE))
+          backgroundColor(AppTheme.background)
         }
         Text {
           attr {
             text("我的")
             fontSize(32f)
             fontWeight700()
-            color(0xFF000000)
+            color(AppTheme.textPrimary)
           }
         }
       }

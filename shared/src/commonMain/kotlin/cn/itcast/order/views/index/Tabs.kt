@@ -1,6 +1,7 @@
 package cn.itcast.order.views.index
 
 import cn.itcast.order.models.TabItemParams
+import cn.itcast.order.base.AppTheme
 import com.tencent.kuikly.core.base.Border
 import com.tencent.kuikly.core.base.BorderStyle
 import com.tencent.kuikly.core.base.BoxShadow
@@ -34,7 +35,7 @@ internal class Tabs : ComposeView<TabsOptions, TabsEvent>() {
           flexDirection(FlexDirection.ROW)
           alignItems(FlexAlign.CENTER)
           borderRadius(62f / 2f)
-          backgroundColor(Color(0xE5FFFFFF))
+          backgroundColor(AppTheme.surface)
           boxShadow(BoxShadow(0f, 4f, 12f, Color(0x0A000000)))
           touchEnable(true)
         }
@@ -61,8 +62,8 @@ internal class Tabs : ComposeView<TabsOptions, TabsEvent>() {
               attr {
                 absolutePosition(0f, 6f, 0f, 6f) // 元素脱离标准文档流
                 borderRadius(50f / 2f)
-                backgroundColor(Color(0x1A000000))
-                border(Border(1f, BorderStyle.SOLID, Color(0x26FFFFFF)))
+                backgroundColor(if (AppTheme.isDark) Color(0x26FFFFFF) else Color(0x1A000000))
+                border(Border(1f, BorderStyle.SOLID, AppTheme.border))
                 opacity(if (index == context.attr.selectedIndex) 1f else 0f)
                 touchEnable(false) // 阻止浮层事件冒泡
               }
@@ -109,7 +110,7 @@ internal class Tabs : ComposeView<TabsOptions, TabsEvent>() {
                 fontSize(11f)
                 fontWeight600()
                 color(
-                  if (index == context.attr.selectedIndex) Color(0xFFFF4D6D) else Color(0xFF8A8F99)
+                  if (index == context.attr.selectedIndex) Color(0xFFFF4D6D) else AppTheme.textSecondary
                 )
               }
             }
