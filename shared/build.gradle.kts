@@ -2,7 +2,7 @@ import com.tencent.kuikly.gradle.config.KuiklyConfig
 
 plugins {
   kotlin("multiplatform")
-  kotlin("native.cocoapods")
+//  kotlin("native.cocoapods")
   id("com.android.library")
   id("com.google.devtools.ksp")
   id("maven-publish")
@@ -36,24 +36,24 @@ kotlin {
     binaries.executable() //将kotlin.js与kotlin代码打包成一份可直接运行的js文件
   }
 
-  iosX64()
-  iosArm64()
-  iosSimulatorArm64()
+//  iosX64()
+//  iosArm64()
+//  iosSimulatorArm64()
 
-  cocoapods {
-    summary = "Some description for the Shared Module"
-    homepage = "Link to the Shared Module homepage"
-    version = "1.0"
-    ios.deploymentTarget = "14.1"
-    podfile = project.file("../iosApp/Podfile")
-    framework {
-      baseName = "shared"
-      freeCompilerArgs = freeCompilerArgs + getCommonCompilerArgs()
-      isStatic = true
-      license = "MIT"
-    }
-    extraSpecAttributes["resources"] = "['src/commonMain/assets/**']"
-  }
+//  cocoapods {
+//    summary = "Some description for the Shared Module"
+//    homepage = "Link to the Shared Module homepage"
+//    version = "1.0"
+//    ios.deploymentTarget = "14.1"
+//    podfile = project.file("../iosApp/Podfile")
+//    framework {
+//      baseName = "shared"
+//      freeCompilerArgs = freeCompilerArgs + getCommonCompilerArgs()
+//      isStatic = true
+//      license = "MIT"
+//    }
+//    extraSpecAttributes["resources"] = "['src/commonMain/assets/**']"
+//  }
 
   sourceSets {
     val commonMain by getting {
@@ -74,24 +74,24 @@ kotlin {
       }
     }
 
-    val iosX64Main by getting
-    val iosArm64Main by getting
-    val iosSimulatorArm64Main by getting
-    val iosMain by creating {
-      dependsOn(commonMain)
-      iosX64Main.dependsOn(this)
-      iosArm64Main.dependsOn(this)
-      iosSimulatorArm64Main.dependsOn(this)
-    }
-    val iosX64Test by getting
-    val iosArm64Test by getting
-    val iosSimulatorArm64Test by getting
-    val iosTest by creating {
-      dependsOn(commonTest)
-      iosX64Test.dependsOn(this)
-      iosArm64Test.dependsOn(this)
-      iosSimulatorArm64Test.dependsOn(this)
-    }
+//    val iosX64Main by getting
+//    val iosArm64Main by getting
+//    val iosSimulatorArm64Main by getting
+//    val iosMain by creating {
+//      dependsOn(commonMain)
+//      iosX64Main.dependsOn(this)
+//      iosArm64Main.dependsOn(this)
+//      iosSimulatorArm64Main.dependsOn(this)
+//    }
+//    val iosX64Test by getting
+//    val iosArm64Test by getting
+//    val iosSimulatorArm64Test by getting
+//    val iosTest by creating {
+//      dependsOn(commonTest)
+//      iosX64Test.dependsOn(this)
+//      iosArm64Test.dependsOn(this)
+//      iosSimulatorArm64Test.dependsOn(this)
+//    }
   }
 }
 
@@ -117,9 +117,9 @@ ksp {
 dependencies {
   compileOnly("com.tencent.kuikly-open:core-ksp:${Version.getKuiklyVersion()}") {
     add("kspAndroid", this)
-    add("kspIosArm64", this)
-    add("kspIosX64", this)
-    add("kspIosSimulatorArm64", this)
+//    add("kspIosArm64", this)
+//    add("kspIosX64", this)
+//    add("kspIosSimulatorArm64", this)
     add("kspJs", this)
   }
 }
