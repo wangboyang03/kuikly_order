@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "serve": "node static_server/serve/index.js",
-    "server": "node static_server/serve/index.js"
+    "server": "node static_server/serve/index.js",
+    "dev": "node scripts/miniapp.mjs --mode=development",
+    "build": "node scripts/miniapp.mjs --mode=production",
+    "preview": "node scripts/miniapp.mjs --skip-build --mode=production",
+    "build:miniapp": "node scripts/miniapp.mjs --mode=production --no-qrcode"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +19,7 @@
     "gulp": "^4.0.2",
     "gulp-zip": "^4.2.0",
     "husky": "^3.1.0",
+    "miniprogram-ci": "^2.1.31",
     "querystring": "^0.2.0",
     "shell": "^0.5.0",
     "shelljs": "^0.8.3"

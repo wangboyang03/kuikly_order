@@ -51,49 +51,29 @@ kotlin {
 // Business project path name
 val businessPathName = "shared"
 
-/**
- * Copy locally built unified JS result to miniApp's dist/business directory
- */
-fun copyLocalJSBundle(buildSubPath: String) {
-  // Output target path
-  val destDir = Paths.get(
-    project.buildDir.absolutePath, "../",
-    "dist", "business"
-  ).toFile()
-  if (!destDir.exists()) {
-    // Create directory if it doesn't exist
-    destDir.mkdirs()
-  } else {
-    // Remove original files if directory exists
-    destDir.deleteRecursively()
-  }
-
-  val sourceDir = Paths.get(
-    project.rootDir.absolutePath,
-    businessPathName,
-    "build/dist/js", buildSubPath
-  ).toFile()
-
-  // Copy files
-  project.copy {
-    // Copy js files from business build result
-    from(sourceDir) {
+fun registerCopyBusinessBundle(taskName: String, sharedJsTask: String, buildSubPath: String) {
+  tasks.register<Copy>(taskName) {
+    group = "kuikly"
+    dependsOn(":$businessPathName:$sharedJsTask")
+    from(Paths.get(project.rootDir.absolutePath, businessPathName, "build/dist/js", buildSubPath).toFile()) {
       include("nativevue2.js")
     }
-    into(destDir)
+    into(Paths.get(project.buildDir.absolutePath, "../", "dist", "business").toFile())
   }
 }
 
 project.afterEvaluate {
-  // kotlin 1.9 from 改为 $buildDir/dist/js/distributions
+  // kotlin 1.9 起产物目录为 $buildDir/dist/js/productionExecutable
   tasks.register<Copy>("syncRenderProductionToDist") {
+    from("$buildDir/dist/js/productionExecutable")
     from("$buildDir/kotlin-webpack/js/distributions")
     into("$projectDir/dist/lib")
     include("**/*.js", "**/*.d.ts")
   }
 
-  // kotlin 1.9 from 改为 $buildDir/dist/js/developmentExecutable
+  // kotlin 1.9 起产物目录为 $buildDir/dist/js/developmentExecutable
   tasks.register<Copy>("syncRenderDevelopmentToDist") {
+    from("$buildDir/dist/js/developmentExecutable")
     from("$buildDir/kotlin-webpack/js/developmentExecutable")
     into("$projectDir/dist/lib")
     include("**/*.js", "**/*.d.ts")
@@ -118,21 +98,17 @@ project.afterEvaluate {
     finalizedBy("syncRenderDevelopmentToDist")
   }
 
+  // 业务 JS -> dist/business
+  registerCopyBusinessBundle("copyBusinessProductionToDist", "jsBrowserProductionWebpack", "productionExecutable")
+  registerCopyBusinessBundle("copyBusinessDevelopmentToDist", "jsBrowserDevelopmentWebpack", "developmentExecutable")
+
   tasks.register("jsMiniAppProductionWebpack") {
     group = "kuikly"
-    // First execute jsBrowserProductionWebpack build task
-    dependsOn("jsBrowserProductionWebpack")
-    // Then copy corresponding nativevue2.zip from business build result and copy nativevue2.js
-    // to miniApp's release directory
-    copyLocalJSBundle("distributions")
+    dependsOn("jsBrowserProductionWebpack", "copyBusinessProductionToDist")
   }
 
   tasks.register("jsMiniAppDevelopmentWebpack") {
     group = "kuikly"
-    // First execute jsBrowserDevelopmentWebpack build task
-    dependsOn("jsBrowserDevelopmentWebpack")
-    // Then copy corresponding nativevue2.zip from business build result and copy nativevue2.js
-    // to miniApp's release directory
-    copyLocalJSBundle("developmentExecutable")
+    dependsOn("jsBrowserDevelopmentWebpack", "copyBusinessDevelopmentToDist")
   }
 }
