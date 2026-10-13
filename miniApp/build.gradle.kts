@@ -51,6 +51,7 @@ kotlin {
 // Business project path name
 val businessPathName = "shared"
 
+/** 先构建业务模块 再从指定目录中筛选出nativevue2.js 复制到统一的业务产物目录 **/
 fun registerCopyBusinessBundle(taskName: String, sharedJsTask: String, buildSubPath: String) {
   tasks.register<Copy>(taskName) {
     group = "kuikly"
@@ -62,6 +63,7 @@ fun registerCopyBusinessBundle(taskName: String, sharedJsTask: String, buildSubP
   }
 }
 
+/** 同步渲染层构建产物 **/
 project.afterEvaluate {
   // kotlin 1.9 起产物目录为 $buildDir/dist/js/productionExecutable
   tasks.register<Copy>("syncRenderProductionToDist") {
@@ -79,15 +81,13 @@ project.afterEvaluate {
     include("**/*.js", "**/*.d.ts")
   }
 
+  /** 复制静态资源 **/
   tasks.register<Copy>("copyAssets") {
-    val assetsDir = Paths.get(
-      project.rootDir.absolutePath,
-      businessPathName,
-      "src/commonMain/assets"
-    ).toFile()
+    val assetsDir = Paths.get(project.rootDir.absolutePath, businessPathName, "src/commonMain/assets").toFile()
     from(assetsDir)
     into("$projectDir/dist/assets")
     include("**/**")
+    exclude("**/.DS_Store")
   }
 
   tasks.named("jsBrowserProductionWebpack") {
@@ -98,17 +98,17 @@ project.afterEvaluate {
     finalizedBy("syncRenderDevelopmentToDist")
   }
 
-  // 业务 JS -> dist/business
-  registerCopyBusinessBundle("copyBusinessProductionToDist", "jsBrowserProductionWebpack", "productionExecutable")
-  registerCopyBusinessBundle("copyBusinessDevelopmentToDist", "jsBrowserDevelopmentWebpack", "developmentExecutable")
+  /** 最后阶段 聚合任务 提供MiniApp构建入口 **/
+  registerCopyBusinessBundle("copyBusinessProductionToDist", "jsBrowserProductionWebpack", "productionExecutable") // 生产环境任务链
+  registerCopyBusinessBundle("copyBusinessDevelopmentToDist", "jsBrowserDevelopmentWebpack", "developmentExecutable") // 开发环境任务链
 
   tasks.register("jsMiniAppProductionWebpack") {
     group = "kuikly"
-    dependsOn("jsBrowserProductionWebpack", "copyBusinessProductionToDist")
+    dependsOn("jsBrowserProductionWebpack", "copyBusinessProductionToDist", "copyAssets")
   }
 
   tasks.register("jsMiniAppDevelopmentWebpack") {
     group = "kuikly"
-    dependsOn("jsBrowserDevelopmentWebpack", "copyBusinessDevelopmentToDist")
+    dependsOn("jsBrowserDevelopmentWebpack", "copyBusinessDevelopmentToDist", "copyAssets")
   }
 }
