@@ -3,9 +3,13 @@ package cn.itcast.kuikly_order
 import cn.itcast.kuikly_order.base.BasePager
 import cn.itcast.kuikly_order.viewmodels.TabsViewModel
 import cn.itcast.kuikly_order.views.Tabs
+import cn.itcast.kuikly_order.views.homepage
+import cn.itcast.kuikly_order.views.mine
+import cn.itcast.kuikly_order.views.order
 import com.tencent.kuikly.core.annotations.Page
 import com.tencent.kuikly.core.base.Color
 import com.tencent.kuikly.core.base.ViewBuilder
+import com.tencent.kuikly.core.directives.vbind
 import com.tencent.kuikly.core.layout.undefined
 import com.tencent.kuikly.core.views.View
 
@@ -18,6 +22,19 @@ import com.tencent.kuikly.core.views.View
         attr {
           flex(1f)
           backgroundColor(Color(0xFFF4F5F7L))
+        }
+
+        View {
+          attr {
+            flex(1f)
+          }
+          vbind({ context.tabsViewModel.selectedIndex }) {
+            when (context.tabsViewModel.selectedIndex) {
+              0 -> homepage { }
+              1 -> order { }
+              else -> mine { }
+            }
+          }
         }
 
         Tabs(context.tabsViewModel) {
